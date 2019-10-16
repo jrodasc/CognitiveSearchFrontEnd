@@ -115,7 +115,7 @@ namespace CognitiveSearch.UI.Controllers
             CloudBlobClient clientBlob = cuentaAlmacenamiento.CreateCloudBlobClient();
             CloudBlobContainer container = clientBlob.GetContainerReference("clinical-trials-small");
             //contenedor.CreateIfNotExists(); 
-            contenedor.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
+            container.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
             //--------------------------------------------------------------
 
