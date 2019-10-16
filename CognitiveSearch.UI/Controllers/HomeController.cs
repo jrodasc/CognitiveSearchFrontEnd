@@ -119,12 +119,12 @@ namespace CognitiveSearch.UI.Controllers
                 Permissions = SharedAccessBlobPermissions.Read | SharedAccessBlobPermissions.List
 
             };
-            adHocPolicy.setPermissions(EnumSet.of(SharedAccessBlobPermissions.READ));
+            
             try{
                 sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
             }catch(Exception e){
                 Console.WriteLine("{0} Exception caught.", e);
-                throw new GradleException("******Error: " + e.getMessage());
+                throw new GradleException("******Error: " + e);
             }
             
             return sasContainerToken;
