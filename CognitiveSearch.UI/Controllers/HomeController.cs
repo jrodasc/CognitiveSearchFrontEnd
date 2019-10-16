@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Auth;
 using CognitiveSearch.UI.Models;
+using Newtonsoft.Json.Linq;
 
 namespace CognitiveSearch.UI.Controllers
 {
@@ -14,11 +18,15 @@ namespace CognitiveSearch.UI.Controllers
     {
         private IConfiguration _configuration { get; set; }
         private DocumentSearchClient _docSearch { get; set; }
+        private string _idField { get; set; }
+        bool _isPathBase64Encoded { get; set; }
 
         public HomeController(IConfiguration configuration)
         {
             _configuration = configuration;
             _docSearch = new DocumentSearchClient(configuration);
+            _idField = _configuration.GetSection("KeyField")?.Value;
+            _isPathBase64Encoded = (_configuration.GetSection("IsPathBase64Encoded")?.Value == "True");
         }
 
         public IActionResult Index()
@@ -62,10 +70,11 @@ namespace CognitiveSearch.UI.Controllers
             }
 
             var response = _docSearch.Search(q, searchFacets, selectFilter, currentPage);
+            var searchId = _docSearch.GetSearchId().ToString();
             var facetResults = new List<object>();
             var tagsResults = new List<object>();
 
-            if (response!= null && response.Facets != null)
+            if (response.Facets != null)
             {
                 // Return only the selected facets from the Search Model
                 foreach (var facetResult in response.Facets.Where(f => _docSearch.Model.Facets.Where(x => x.Name == f.Key).Any()))
@@ -76,48 +85,53 @@ namespace CognitiveSearch.UI.Controllers
                         value = facetResult.Value
                     });
                 }
-                
-                // Just create a list of tags for now.
-                // TODO: This does not need to be a dictionary.
-                foreach (var tag in _docSearch.Model.Tags)
+
+                foreach (var tagResult in response.Facets.Where(t => _docSearch.Model.Tags.Where(x => x.Name == t.Key).Any()))
                 {
                     tagsResults.Add(new
                     {
-                        key = tag.Name,
-                        value = tag.Name
+                        key = tagResult.Key,
+                        value = tagResult.Value
                     });
                 }
             }
 
-            return new JsonResult(new DocumentResult { Results = response.Results, Facets = facetResults, Tags = tagsResults, Count = Convert.ToInt32(response.Count), Token = token });
+            return new JsonResult(new DocumentResult
+            {
+                Results = response.Results,
+                Facets = facetResults,
+                Tags = tagsResults,
+                Count = Convert.ToInt32(response.Count),
+                Token = token,
+                SearchId = searchId,
+                IdField = _idField,
+                IsPathBase64Encoded = _isPathBase64Encoded
+            });
         }
 
         [HttpPost]
         public IActionResult GetDocumentById(string id = "")
         {
             var token = GetContainerSasUri();
-
             var response = _docSearch.LookUp(id);
-            var facetResults = new List<object>();
 
-            return new JsonResult(new DocumentResult { Result = response, Token = token });
+            return new JsonResult(
+                new DocumentResult
+                {
+                    Result = response,
+                    Token = token,
+                    IdField = _idField,
+                    IsPathBase64Encoded = _isPathBase64Encoded
+                });
         }
 
         private string GetContainerSasUri()
         {
-            /* string sasContainerToken;
+            string sasContainerToken;
             string accountName = _configuration.GetSection("StorageAccountName")?.Value;
             string accountKey = _configuration.GetSection("StorageAccountKey")?.Value;
             string containerAddress = _configuration.GetSection("StorageContainerAddress")?.Value;
-            CloudBlobContainer container = new CloudBlobContainer(new Uri(containerAddress), new StorageCredentials(accountName, accountKey));*/
-            //--------------------------------------------------------------
-            CloudStorageAccount cuentaAlmacenamiento = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=ppidemocognitive;AccountKey=EsQwd+Bp6hHoMwIlZtcc1d2jaI7vJJdJIh/gEsUwdQWBh8Zw0cGqDXUPDXvXIYD+xDoJrs9bDIIk5W2c0bA/nw==;EndpointSuffix=core.windows.net");
-            CloudBlobClient clientBlob = cuentaAlmacenamiento.CreateCloudBlobClient();
-            CloudBlobContainer container = clientBlob.GetContainerReference("contenedorplazi");
-            //contenedor.CreateIfNotExists(); 
-            container.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
-
-            //--------------------------------------------------------------
+            CloudBlobContainer container = new CloudBlobContainer(new Uri(containerAddress), new StorageCredentials(accountName, accountKey));
 
             SharedAccessBlobPolicy adHocPolicy = new SharedAccessBlobPolicy()
             {
@@ -125,8 +139,47 @@ namespace CognitiveSearch.UI.Controllers
                 Permissions = SharedAccessBlobPermissions.Read
             };
 
-            sasContainerToken = container.GetSharedAccessSignature(adHocPolicy);
+            sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
             return sasContainerToken;
+        }
+
+        [HttpPost]
+        public JObject GetGraphData(string query)
+        {
+            string facetName = _configuration.GetSection("GraphFacet")?.Value;
+
+            if (query == null)
+            {
+                query = "*";
+            }
+            FacetGraphGenerator graphGenerator = new FacetGraphGenerator(_docSearch);
+            var graphJson = graphGenerator.GetFacetGraphNodes(query, facetName);
+
+            return graphJson;
+        }
+
+        [HttpPost, HttpGet]
+        public ActionResult Suggest(string term, bool fuzzy = true)
+        {
+            // Call suggest query and return results
+            var response = _docSearch.Suggest(term, fuzzy);
+            List<string> suggestions = new List<string>();
+            if (response != null)
+            {
+                foreach (var result in response.Results)
+                {
+                    suggestions.Add(result.Text);
+                }
+            }
+
+            // Get unique items
+            List<string> uniqueItems = suggestions.Distinct().ToList();
+
+            return new JsonResult
+            (
+                uniqueItems
+            );
+
         }
     }
 }
