@@ -124,7 +124,7 @@ namespace CognitiveSearch.UI.Controllers
                 sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
             }catch(Exception e){
                 Console.WriteLine("{0} Exception caught.", e);
-                throw new GradleException("******Error: " + e);
+                
             }
             
             return sasContainerToken;
