@@ -117,9 +117,6 @@ namespace CognitiveSearch.UI.Controllers
             return new JsonResult(new DocumentResult { Result = response, Token = token });
         }
 
-        private string GetContainerSasUri()
-        {
-            
-        }
+       
     }
 }
