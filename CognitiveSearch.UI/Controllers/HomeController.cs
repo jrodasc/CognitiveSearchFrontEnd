@@ -113,7 +113,7 @@ namespace CognitiveSearch.UI.Controllers
             //--------------------------------------------------------------
             CloudStorageAccount cuentaAlmacenamiento = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=ppidemocognitive;AccountKey=EsQwd+Bp6hHoMwIlZtcc1d2jaI7vJJdJIh/gEsUwdQWBh8Zw0cGqDXUPDXvXIYD+xDoJrs9bDIIk5W2c0bA/nw==;EndpointSuffix=core.windows.net");
             CloudBlobClient clientBlob = cuentaAlmacenamiento.CreateCloudBlobClient();
-            CloudBlobContainer container = clientBlob.GetContainerReference("clinical-trials-small");
+            CloudBlobContainer container = clientBlob.GetContainerReference("contenedorplazi");
             //contenedor.CreateIfNotExists(); 
             container.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
