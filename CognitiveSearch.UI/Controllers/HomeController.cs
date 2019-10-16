@@ -53,7 +53,7 @@ namespace CognitiveSearch.UI.Controllers
         [HttpPost]
         public IActionResult GetDocuments(string q = "", SearchFacet[] searchFacets = null, int currentPage = 1)
         {
-            string sasContainerToken;
+             string sasContainerToken;
             string accountName = _configuration.GetSection("StorageAccountName")?.Value;
             string accountKey = _configuration.GetSection("StorageAccountKey")?.Value;
             string containerAddress = _configuration.GetSection("StorageContainerAddress")?.Value;
@@ -117,6 +117,22 @@ namespace CognitiveSearch.UI.Controllers
             return new JsonResult(new DocumentResult { Result = response, Token = token });
         }
 
-       
+        private string GetContainerSasUri()
+        {
+            string sasContainerToken;
+            string accountName = _configuration.GetSection("StorageAccountName")?.Value;
+            string accountKey = _configuration.GetSection("StorageAccountKey")?.Value;
+            string containerAddress = _configuration.GetSection("StorageContainerAddress")?.Value;
+            CloudBlobContainer container = new CloudBlobContainer(new Uri(containerAddress), new StorageCredentials(accountName, accountKey));
+
+            SharedAccessBlobPolicy adHocPolicy = new SharedAccessBlobPolicy()
+            {
+                SharedAccessExpiryTime = DateTime.UtcNow.AddHours(1),
+                Permissions = SharedAccessBlobPermissions.Read
+            };
+
+            sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
+            return sasContainerToken;
+        }
     }
 }
