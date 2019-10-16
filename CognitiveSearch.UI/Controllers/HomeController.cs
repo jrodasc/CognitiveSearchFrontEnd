@@ -117,10 +117,10 @@ namespace CognitiveSearch.UI.Controllers
                 SharedAccessBlobPolicy adHocPolicy = new SharedAccessBlobPolicy()
                 {
                     SharedAccessExpiryTime = DateTime.UtcNow.AddHours(1),
-                    Permissions = SharedAccessBlobPermissions.Read | SharedAccessBlobPermissions.List
+                    Permissions = SharedAccessBlobPermissions.Read
 
                 };
-                sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
+                sasContainerToken = container.GetSharedAccessSignature(adHocPolicy);
             }catch(Exception e){
                 Console.WriteLine("{0} Exception caught.", e);
                 
