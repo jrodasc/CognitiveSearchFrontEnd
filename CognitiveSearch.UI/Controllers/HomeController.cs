@@ -105,11 +105,19 @@ namespace CognitiveSearch.UI.Controllers
 
         private string GetContainerSasUri()
         {
-            string sasContainerToken;
+            /* string sasContainerToken;
             string accountName = _configuration.GetSection("StorageAccountName")?.Value;
             string accountKey = _configuration.GetSection("StorageAccountKey")?.Value;
             string containerAddress = _configuration.GetSection("StorageContainerAddress")?.Value;
-            CloudBlobContainer container = new CloudBlobContainer(new Uri(containerAddress), new StorageCredentials(accountName, accountKey));
+            CloudBlobContainer container = new CloudBlobContainer(new Uri(containerAddress), new StorageCredentials(accountName, accountKey));*/
+            //--------------------------------------------------------------
+            CloudStorageAccount cuentaAlmacenamiento = CloudStorageAccount.Parse("DefaultEndpointsProtocol=https;AccountName=ppidemocognitive;AccountKey=EsQwd+Bp6hHoMwIlZtcc1d2jaI7vJJdJIh/gEsUwdQWBh8Zw0cGqDXUPDXvXIYD+xDoJrs9bDIIk5W2c0bA/nw==;EndpointSuffix=core.windows.net");
+            CloudBlobClient clientBlob = cuentaAlmacenamiento.CreateCloudBlobClient();
+            CloudBlobContainer container = clientBlob.GetContainerReference("clinical-trials-small");
+            //contenedor.CreateIfNotExists(); 
+            contenedor.SetPermissions(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
+
+            //--------------------------------------------------------------
 
             SharedAccessBlobPolicy adHocPolicy = new SharedAccessBlobPolicy()
             {
