@@ -107,20 +107,19 @@ namespace CognitiveSearch.UI.Controllers
         private string GetContainerSasUri()
         {
             
-            string sasContainerToken;
-            string accountName = _configuration.GetSection("StorageAccountName")?.Value;
-            string accountKey = _configuration.GetSection("StorageAccountKey")?.Value;
-            string containerAddress = _configuration.GetSection("StorageContainerAddress")?.Value;
-            CloudBlobContainer container = new CloudBlobContainer(new Uri(containerAddress), new StorageCredentials(accountName, accountKey));
-
-            SharedAccessBlobPolicy adHocPolicy = new SharedAccessBlobPolicy()
-            {
-                SharedAccessExpiryTime = DateTime.UtcNow.AddHours(1),
-                Permissions = SharedAccessBlobPermissions.Read | SharedAccessBlobPermissions.List
-
-            };
-            
             try{
+                string sasContainerToken;
+                string accountName = _configuration.GetSection("StorageAccountName")?.Value;
+                string accountKey = _configuration.GetSection("StorageAccountKey")?.Value;
+                string containerAddress = _configuration.GetSection("StorageContainerAddress")?.Value;
+                CloudBlobContainer container = new CloudBlobContainer(new Uri(containerAddress), new StorageCredentials(accountName, accountKey));
+
+                SharedAccessBlobPolicy adHocPolicy = new SharedAccessBlobPolicy()
+                {
+                    SharedAccessExpiryTime = DateTime.UtcNow.AddHours(1),
+                    Permissions = SharedAccessBlobPermissions.Read | SharedAccessBlobPermissions.List
+
+                };
                 sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
             }catch(Exception e){
                 Console.WriteLine("{0} Exception caught.", e);
