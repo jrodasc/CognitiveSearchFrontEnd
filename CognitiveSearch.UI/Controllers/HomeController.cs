@@ -106,6 +106,7 @@ namespace CognitiveSearch.UI.Controllers
 
         private string GetContainerSasUri()
         {
+            
             string sasContainerToken;
             string accountName = _configuration.GetSection("StorageAccountName")?.Value;
             string accountKey = _configuration.GetSection("StorageAccountKey")?.Value;
@@ -119,7 +120,13 @@ namespace CognitiveSearch.UI.Controllers
 
             };
             adHocPolicy.setPermissions(EnumSet.of(SharedAccessBlobPermissions.READ));
-            sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
+            try{
+                sasContainerToken = container.GetSharedAccessSignature(adHocPolicy, null);
+            }catch(Exception e){
+                Console.WriteLine("{0} Exception caught.", e);
+                throw new GradleException("******Error: " + e.getMessage());
+            }
+            
             return sasContainerToken;
         }
     }
